@@ -1,0 +1,6 @@
+.venv
+.env
+poetry.lock
+pyproject.toml
+서비스설계초안.txt
+HackersTalk
