@@ -47,7 +47,7 @@ def stt_result_ui(uploaded_file=None):
         stt_done = True
     except Exception as e:
         print(e)
-        st.write("Error in file processing.")
+        st.write("Error in STT response.")
 
     finally:
         return stt_done
@@ -57,18 +57,24 @@ def tts_result_ui():
     '''
     tts 결과를 음성과 텍스트로 동시 제공
     '''
+    tts_done = False
+
     response = requests.post(TTS_API_URL)
 
     try:
-        st.write(response.json()["result"])
+        tts_audio_result = response.json()["result"]
+        st.write(tts_audio_result)
         st.session_state["stt_source"] = response.json()["result"]
-        stt_done = True
+        tts_done = True
+
+        st.audio(tts_audio_result, format="audio/wav")
+
     except Exception as e:
         print(e)
-        st.write("Error in file processing.")
+        st.write("Error in TTS response.")
 
     finally:
-        return stt_done
+        return tts_done
 
 
 def input_ui_1():
@@ -123,8 +129,8 @@ def main():
         with col2:
             input_ui_2()
 
-    st.title("o GPT's Speak o")
 
+    st.title("o GPT's Speak o")
     # 24.1.3 개발 이어서..
     # if stt_done_flag:
     #     tts_result_ui()
