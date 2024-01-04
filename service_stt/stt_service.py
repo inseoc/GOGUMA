@@ -57,8 +57,6 @@ async def upload_audio_and_transcribe(file: UploadFile = File(...)) -> Dict[str,
         return {"result": f"STT result's type is not string.\nSTT API Result: {stt_text}"}
 
 
-
-
 if __name__ == "__main__":
     import uvicorn
     

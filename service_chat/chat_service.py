@@ -1,6 +1,5 @@
 import os
-
-from datetime import datetime
+import openai
 
 from openai import OpenAI
 from typing import Dict
@@ -29,36 +28,35 @@ app.add_middleware(
 
 client = OpenAI()
 
-@app.post("/tts")
-async def speak_to_user(gpt_answer: str="") -> Dict[str, str]:
+openai.api_key = os.getenv("OPENAI_API_KEY", None)
+
+
+
+@app.post("/chat")
+async def talk_to_chatgpt(stt_text: str="") -> Dict[str, str]:
     # async def ... await : 비동기 함수 동작
-    tts_input_text = await gpt_answer
+    chat_input_text = await stt_text
 
-    now = datetime.now()
-    present_time = str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute) + str(now.second)
+    '''
+    Agent까지 적용은 하지 않지만 여러 프롬프트를 활용할 준비를 해놔야 한다.
+    난이도, 주제, chat-type 등 여러 요소를 입력받아야 한다.
 
-    tts_api_response = client.audio.speech.create(
-        model="tts-1",
-        voice="alloy",
-        input=tts_input_text,
-    )
+    이를 통해 사용자의 stt 결과에 어울리는 답변을 gpt가 생성할 수 있도록 해야 하는
+    가장 핵심 단계라 할 수 있다.
+    '''
 
-    # 결과 반환
-    tts_audio = tts_api_response.text    # str type
 
-    # 오디오 데이터를 mp3 형식으로 저장
-    mp3_file_path = f"./answer_{present_time}.mp3"
-    with open(mp3_file_path, 'wb') as mp3_file:
-        mp3_file.write(tts_audio)
-    print(f"Save the TTS result in audio(mp3): {os.path.abspath(mp3_file_path)}")
 
-    if isinstance(tts_audio, str):
-        return {"result": tts_audio, "answer_text": tts_input_text}
-    else:
-        return {"result": f"TTS result's type is not string.\nTTS API Result: {tts_audio}"}
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
     import uvicorn
     
     uvicorn.run(app, host="0.0.0.0", port=8001)
+    
