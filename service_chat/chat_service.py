@@ -33,9 +33,20 @@ openai.api_key = os.getenv("OPENAI_API_KEY", None)
 
 
 @app.post("/chat")
-async def talk_to_chatgpt(stt_text: str="") -> Dict[str, str]:
+async def talk_to_chatgpt(session_state) -> Dict[str, str]:
     # async def ... await : 비동기 함수 동작
-    chat_input_text = await stt_text
+    chat_input_text = await session_state['stt_source']
+    talk_type = await session_state["talk_type"]
+    subject = False
+    
+    if talk_type == "role_playing":
+        subject = await session_state["jargon"]
+    
+
+
+
+
+
 
     '''
     Agent까지 적용은 하지 않지만 여러 프롬프트를 활용할 준비를 해놔야 한다.
