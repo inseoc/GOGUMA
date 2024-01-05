@@ -2,9 +2,11 @@ import json
 import requests
 import streamlit as st
 
+
 STT_API_URL="http://localhost:8001/stt"
 CHAT_API_URL="http://localhost:8001/chat"
 TTS_API_URL="http://localhost:8001/tts"
+
 
 def init_session_state():
     '''
@@ -22,11 +24,11 @@ def init_session_state():
     if "talk_type" not in st.session_state:
         st.session_state["talk_type"] = ""
 
-    if "full_chat" not in st.session_state:
-        st.session_state["full_chat"] = ""
+    # if "full_chat" not in st.session_state:
+    #     st.session_state["full_chat"] = False
 
-    if "role_playing" not in st.session_state:
-        st.session_state["role_playing"] = ""
+    # if "role_playing" not in st.session_state:
+    #     st.session_state["role_playing"] = False
 
     if "jargon" not in st.session_state:
         st.session_state["jargon"] = ""
@@ -131,8 +133,16 @@ def main():
 
 
     st.title("o GPT's Speak o")
-    # 24.1.3 개발 이어서..
-    # if stt_done_flag:
+
+    # chat-gpt API 연결 및 동작
+    if stt_done_flag:
+        response = requests.post(CHAT_API_URL, files=st.session_state)
+        ...
+        chat_answer = True
+
+
+    # tts API 연결 및 동작
+    # if stt_done_flag and chat_answer:
     #     tts_result_ui()
 
 
