@@ -36,7 +36,7 @@ class Response(BaseModel):
     result: Any
 
 
-@app.post("/setting_for_persona/", response_model=Response)
+@app.post("/setting_for_persona", response_model=Response)
 async def setting_for_persona(request: PersonaRequest):
     persona_response = openai_helper.set_persona(request.model_dump())
         

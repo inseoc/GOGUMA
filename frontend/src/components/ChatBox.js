@@ -53,6 +53,11 @@ function ChatBox() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="메시지를 입력하세요."
+                    onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                            handleSend();
+                        }
+                    }}
                     sx={{ mr: 1 }}
                 />
                 <Button variant="contained" color="primary" onClick={handleSend} sx={{ mr: 1 }}>
