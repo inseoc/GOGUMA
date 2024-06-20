@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Box, TextField, Button, IconButton, Typography } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
@@ -6,6 +6,8 @@ import StopIcon from '@mui/icons-material/Stop';
 function ChatBox() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
+    const [listening, setListening] = useState(false);
+    const recognitionRef = useRef(null);
 
     const handleSend = async () => {
         if (input.trim()) {
@@ -26,6 +28,53 @@ function ChatBox() {
                 console.error('Error:', error);
             }
         }
+    };
+
+    const startListening = () => {
+        if (!('webkitSpeechRecognition' in window)) {
+            alert('Your browser does not support speech recognition. Please use Chrome.');
+            return;
+        }
+
+        const SpeechRecognition = window.webkitSpeechRecognition;
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = true;
+        recognitionRef.current.lang = 'ko-KR';
+
+        recognitionRef.current.onstart = () => {
+            setListening(true);
+        };
+
+        recognitionRef.current.onresult = (event) => {
+            let interimTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    setInput((prev) => prev + transcript);
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+            setInput(interimTranscript);
+        };
+
+        recognitionRef.current.onerror = (event) => {
+            console.error('Speech recognition error', event.error);
+        };
+
+        recognitionRef.current.onend = () => {
+            setListening(false);
+        };
+
+        recognitionRef.current.start();
+    };
+
+    const stopListening = () => {
+        if (recognitionRef.current) {
+            recognitionRef.current.stop();
+        }
+        setListening(false);
     };
 
     return (
@@ -63,10 +112,10 @@ function ChatBox() {
                 <Button variant="contained" color="primary" onClick={handleSend} sx={{ mr: 1 }}>
                     Send
                 </Button>
-                <IconButton color="primary" className="mic-button">
+                <IconButton color="primary" onClick={startListening} disabled={listening}>
                     <MicIcon />
                 </IconButton>
-                <IconButton color="secondary" className="stop-button">
+                <IconButton color="secondary" onClick={stopListening} disabled={!listening}>
                     <StopIcon />
                 </IconButton>
             </Box>

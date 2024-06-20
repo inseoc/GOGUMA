@@ -43,7 +43,7 @@ async def setting_for_persona(request: PersonaRequest):
     return Response(**persona_response)
 
     
-@app.post("/speech_to_text/", response_model=AudioResponse)
+@app.post("/speech_to_text", response_model=AudioResponse)
 async def speech_to_text(file: UploadFile = File(...)):
     audio_data = await file.read()
     stt_response = openai_helper.stt(audio_data)
@@ -51,7 +51,7 @@ async def speech_to_text(file: UploadFile = File(...)):
     return AudioResponse(text=stt_response)
 
 
-@app.post("/text_to_speech/")
+@app.post("/text_to_speech")
 async def text_to_speech(request: TextRequest):
     tts_response = openai_helper.tts(request.text)
     
