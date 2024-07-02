@@ -126,18 +126,19 @@ class openaiHelper:
         
         사용 모델: tts-1
         '''
-        
+        input_text = message.result[0]
+
         llm_reply = dict()
 
         try:
             speech = self.client.audio.speech.create(
                 model=self.tts_model_name,
-                voice="alloy", # 'alloy' is man, 'nova' is woman
-                input=message,
+                voice="nova", # 'alloy' is man, 'nova' is woman
+                input=input_text,
             )
-            
+
             # llm_reply["response"] = speech  # completion.iter_bytes 함수 활용 필요
-            llm_reply = self.log_manager.success_log(llm_reply, speech)
+            llm_reply = self.log_manager.success_log(llm_reply, speech, input_text)
         
         except Exception as e:
             err_msg = f"'tts' function of 'openaiHelper' got the error: {e}"

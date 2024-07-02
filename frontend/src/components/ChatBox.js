@@ -1,13 +1,26 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Box, TextField, Button, IconButton, Typography } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 
 function ChatBox() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [listening, setListening] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
     const recognitionRef = useRef(null);
+    const audioContextRef = useRef(null);
+    const audioSourceRef = useRef(null);
+
+    useEffect(() => {
+        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        return () => {
+            if (audioContextRef.current) {
+                audioContextRef.current.close();
+            }
+        };
+    }, []);
 
     const handleSend = async () => {
         if (input.trim()) {
@@ -16,18 +29,60 @@ function ChatBox() {
             setInput('');
 
             try {
-                const response = await fetch('http://localhost:8000/gpt_generation', {  // FastAPI 서버 주소
+                const response = await fetch('http://localhost:8000/text_to_speech', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: input }),  // 필드명을 'text'로 수정
+                    body: JSON.stringify({ text: input }),
                 });
 
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
                 const data = await response.json();
-                setMessages([...messages, newMessage, { sender: 'bot', text: data.result }]);
+                
+                // Convert base64 to ArrayBuffer
+                const binaryString = window.atob(data.audio);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                const arrayBuffer = bytes.buffer;
+
+                const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+
+                const botMessage = { sender: 'bot', text: data.text, audio: audioBuffer };
+                setMessages(prevMessages => [...prevMessages, botMessage]);
+
+                playAudio(audioBuffer);
             } catch (error) {
                 console.error('Error:', error);
             }
         }
+    };
+
+
+    const playAudio = (audioBuffer) => {
+        if (isPlaying) {
+            stopAudio();
+        }
+
+        const source = audioContextRef.current.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioContextRef.current.destination);
+        source.onended = () => setIsPlaying(false);
+        source.start();
+        audioSourceRef.current = source;
+        setIsPlaying(true);
+    };
+
+    const stopAudio = () => {
+        if (audioSourceRef.current) {
+            audioSourceRef.current.stop();
+            audioSourceRef.current = null;
+        }
+        setIsPlaying(false);
     };
 
     const startListening = () => {
@@ -89,9 +144,16 @@ function ChatBox() {
                             borderRadius: '4px',
                             alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
                             backgroundColor: msg.sender === 'user' ? '#e0f7fa' : '#e0e0e0',
+                            display: 'flex',
+                            alignItems: 'center',
                         }}
                     >
                         <Typography variant="body1">{msg.text}</Typography>
+                        {msg.audio && (
+                            <IconButton onClick={() => playAudio(msg.audio)} size="small">
+                                <VolumeUpIcon />
+                            </IconButton>
+                        )}
                     </Box>
                 ))}
             </Box>
