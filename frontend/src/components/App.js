@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Typography, Button, TextField, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel } from '@mui/material';
 import ChatBox from './ChatBox';
+import gogumaIcon from './goguma_icon.webp';  // 이미지 파일 import
 
 function App() {
     const [gender, setGender] = useState('');
@@ -10,7 +11,7 @@ function App() {
     const handleApply = async () => {
         if (gender && persona) {
             try {
-                const response = await fetch('http://localhost:8000/setting_for_persona', {  // FastAPI 서버 주소
+                const response = await fetch('http://localhost:8000/setting_for_persona', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ gender, persona }),
@@ -34,6 +35,9 @@ function App() {
 
     return (
         <Container component="main" maxWidth="xs" style={{ marginTop: '2rem' }}>
+            {/* 이미지를 상단에 추가 */}
+            <img src={gogumaIcon} alt="Goguma Icon" style={{ width: '100%', marginBottom: '1rem' }} />
+            
             <Typography component="h1" variant="h5" align="center" gutterBottom>
                 Persona Chat App
             </Typography>
