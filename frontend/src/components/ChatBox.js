@@ -12,6 +12,7 @@ function ChatBox() {
     const recognitionRef = useRef(null);
     const audioContextRef = useRef(null);
     const audioSourceRef = useRef(null);
+    const [interimTranscript, setInterimTranscript] = useState('');
 
     useEffect(() => {
         audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
@@ -62,7 +63,6 @@ function ChatBox() {
         }
     };
 
-
     const playAudio = (audioBuffer) => {
         if (isPlaying) {
             stopAudio();
@@ -99,19 +99,23 @@ function ChatBox() {
 
         recognitionRef.current.onstart = () => {
             setListening(true);
+            setInterimTranscript('');
         };
 
         recognitionRef.current.onresult = (event) => {
             let interimTranscript = '';
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-                const transcript = event.results[i][0].transcript;
+            let finalTranscript = '';
+
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
                 if (event.results[i].isFinal) {
-                    setInput((prev) => prev + transcript);
+                    finalTranscript += event.results[i][0].transcript;
                 } else {
-                    interimTranscript += transcript;
+                    interimTranscript += event.results[i][0].transcript;
                 }
             }
-            setInput(interimTranscript);
+
+            setInput(prevInput => prevInput + finalTranscript);
+            setInterimTranscript(interimTranscript);
         };
 
         recognitionRef.current.onerror = (event) => {
@@ -120,6 +124,9 @@ function ChatBox() {
 
         recognitionRef.current.onend = () => {
             setListening(false);
+            // 음성 인식이 끝나면 중간 결과를 최종 입력에 추가
+            setInput(prevInput => prevInput + interimTranscript);
+            setInterimTranscript('');
         };
 
         recognitionRef.current.start();
@@ -129,7 +136,6 @@ function ChatBox() {
         if (recognitionRef.current) {
             recognitionRef.current.stop();
         }
-        setListening(false);
     };
 
     return (
@@ -157,7 +163,7 @@ function ChatBox() {
                     </Box>
                 ))}
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', mb: 2 }}>
                 <TextField
                     fullWidth
                     variant="outlined"
@@ -169,8 +175,15 @@ function ChatBox() {
                             handleSend();
                         }
                     }}
-                    sx={{ mr: 1 }}
+                    sx={{ mb: 1 }}
                 />
+                {interimTranscript && (
+                    <Typography variant="body2" color="textSecondary">
+                        {interimTranscript}
+                    </Typography>
+                )}
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Button variant="contained" color="primary" onClick={handleSend} sx={{ mr: 1 }}>
                     Send
                 </Button>
